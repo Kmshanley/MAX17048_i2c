@@ -40,12 +40,12 @@ typedef struct
 } MAX17048_t;
 
 esp_err_t MAX17048_init_desc(MAX17048_t *dev, uint8_t addr, i2c_port_t port, gpio_num_t sda_gpio, gpio_num_t scl_gpio);
-uint16_t MAX17048_get_adc(MAX17048_t *dev);
-float MAX17048_get_voltage(MAX17048_t *dev);
-float MAX17048_get_soc(MAX17048_t *dev);
+esp_err_t MAX17048_get_adc(MAX17048_t *dev, uint16_t * adc);
+esp_err_t MAX17048_get_voltage(MAX17048_t *dev, float * volts);
+esp_err_t MAX17048_get_soc(MAX17048_t *dev, float * soc);
 uint16_t MAX17048_get_mode(MAX17048_t *dev);
 uint16_t MAX17048_get_version(MAX17048_t *dev);
-float MAX17048_get_crate(MAX17048_t *dev);
+esp_err_t MAX17048_get_crate(MAX17048_t *dev, float * crate);
 void MAX17048_tempCompensate(MAX17048_t *dev, float temp);
 
 /**

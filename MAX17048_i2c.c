@@ -23,29 +23,42 @@ esp_err_t MAX17048_init_desc(MAX17048_t *dev, uint8_t addr, i2c_port_t port, gpi
     return i2c_dev_create_mutex(&dev->i2c_dev);
 }
 
-uint16_t MAX17048_get_adc(MAX17048_t *dev) 
+esp_err_t MAX17048_get_adc(MAX17048_t *dev, uint16_t * adc) 
 {
     uint16_t data;
     I2C_DEV_TAKE_MUTEX(&dev->i2c_dev);
-    i2c_dev_read_reg(&dev->i2c_dev, MAX17048_VCELL, &data, 2);
+    if (i2c_dev_read_reg(&dev->i2c_dev, MAX17048_VCELL, &data, 2) != ESP_OK) {
+        I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
+        return ESP_FAIL;
+    }
     data = REV16_A(data);
+    *adc = data;
     I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
-    return data;
+    return ESP_OK;
 }
 
-float MAX17048_get_soc(MAX17048_t *dev)
+esp_err_t MAX17048_get_soc(MAX17048_t *dev, float * soc)
 {
     uint16_t data;
     I2C_DEV_TAKE_MUTEX(&dev->i2c_dev);
-    i2c_dev_read_reg(&dev->i2c_dev, MAX17048_SOC, &data, 2);
+    if (i2c_dev_read_reg(&dev->i2c_dev, MAX17048_SOC, &data, 2) != ESP_OK) {
+        I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
+        return ESP_FAIL;
+    }
     data = REV16_A(data);
     I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
-    return (float)data / 256.f;
+    *soc = (float)data / 256.f;
+    return ESP_OK;
 }
 
-float MAX17048_get_voltage(MAX17048_t *dev) 
+esp_err_t MAX17048_get_voltage(MAX17048_t *dev, float * volts) 
 {
-    return (float)MAX17048_get_adc(dev) * 78.125f / 1000000.f;
+    uint16_t adc = 0;
+    if (MAX17048_get_adc(dev, &adc) != ESP_OK) {
+        return ESP_FAIL;
+    }
+    *volts = (float)(adc) * 78.125f / 1000000.f;
+    return ESP_OK;
 }
 
 uint16_t MAX17048_get_mode(MAX17048_t *dev) 
@@ -68,14 +81,18 @@ uint16_t MAX17048_get_version(MAX17048_t *dev)
     return data;
 }
 
-float MAX17048_get_crate(MAX17048_t *dev)
+esp_err_t MAX17048_get_crate(MAX17048_t *dev, float * crate)
 {
     uint16_t data;
     I2C_DEV_TAKE_MUTEX(&dev->i2c_dev);
-    i2c_dev_read_reg(&dev->i2c_dev, MAX17048_CRATE, &data, 2);
+    if (i2c_dev_read_reg(&dev->i2c_dev, MAX17048_CRATE, &data, 2) != ESP_OK) {
+        I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
+        return ESP_FAIL;
+    }
     data = REV16_A(data);
     I2C_DEV_GIVE_MUTEX(&dev->i2c_dev);
-    return (float)data * 0.208f;
+    *crate = (float)data * 0.208f;
+    return ESP_OK;
 }
 
 void MAX17048_tempCompensate(MAX17048_t *dev, float temp)
